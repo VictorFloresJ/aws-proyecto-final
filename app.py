@@ -30,12 +30,12 @@ def validar_profesor(data, id_unico=True):
 
     if not isinstance(data['id'], int):
         return "El id debe ser un número entero"
-    if not isinstance(data['numeroEmpleado'], str) or not data['numeroEmpleado'].strip():
-        return "El número de empleado debe ser una cadena no vacía"
+    if not isinstance(data['numeroEmpleado'], (str, int)) or str(data['numeroEmpleado']).strip() == "" or int(data['numeroEmpleado']) < 0:
+        return "El número de empleado debe ser una cadena o número positivo no vacío"
     if any(not isinstance(data[f], str) or not data[f].strip() for f in ('nombres', 'apellidos')):
         return "Nombres y apellidos deben ser cadenas no vacías"
-    if not isinstance(data['horasClase'], (int, float)):
-        return "Las horas de clase deben ser numéricas"
+    if not isinstance(data['horasClase'], (int, float)) or data['horasClase'] < 0:
+        return "Las horas de clase deben ser numéricas (positivo)"
 
     if id_unico and any(p['id'] == data['id'] for p in profesores):
         return "Ya existe un profesor con ese id"
@@ -134,4 +134,4 @@ def internal_error(error):
 
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000)
+    app.run(host='0.0.0.0', port=8080)
