@@ -408,7 +408,6 @@ def update_profesor(id):
     if not data:
         return jsonify({'error': 'JSON mal formado o vacío'}), 400
         
-    # 🚨 FIX: Validar tipos de datos para prevenir 500
     error = validar_profesor_data(data, is_update=True)
     if error:
         return jsonify({'error': error}), 400
