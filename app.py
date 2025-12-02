@@ -11,24 +11,17 @@ from boto3.dynamodb.conditions import Key
 app = Flask(__name__)
 
 # --- CONFIGURACIÓN ---
-app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:root@localhost/uady'
 
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db = SQLAlchemy(app)
 
-
-AWS_REGION = 'us-east-1'
-AWS_ACCESS_KEY = ''       
-AWS_SECRET_KEY = ''       
-AWS_SESSION_TOKEN = ''
-
 try:
     session = boto3.Session(
-        aws_access_key_id=AWS_ACCESS_KEY,
-        aws_secret_access_key=AWS_SECRET_KEY,
-        aws_session_token=AWS_SESSION_TOKEN,
-        region_name=AWS_REGION
+        aws_access_key_id=os.getenv("AWS_ACCESS_KEY_ID"),
+        aws_secret_access_key=os.getenv("AWS_SECRET_ACCESS_KEY"),
+        aws_session_token=os.getenv("AWS_SESSION_TOKEN"),
+        region_name=os.getenv("AWS_DEFAULT_REGION", "us-east-1")
     )
 
     s3_client = session.client('s3')
@@ -47,14 +40,13 @@ SNS_TOPIC_ARN = 'arn:aws:sns:us-east-1:726674656053:reporte-calificaciones'
 DYNAMO_TABLE_NAME = 'sesiones-alumnos'
 
 
-# --- MODELOS (ORM) ---
 
 class Alumno(db.Model):
     __tablename__ = 'alumnos'
     id = db.Column(db.Integer, primary_key=True)
     nombres = db.Column(db.String(100), nullable=False)
     apellidos = db.Column(db.String(100), nullable=False)
-    matricula = db.Column(db.String(50), nullable=False, unique=True) # Añadido unique para manejar IntegrityError
+    matricula = db.Column(db.String(50), nullable=False, unique=True) 
     promedio = db.Column(db.Float, nullable=False)
     fotoPerfilUrl = db.Column(db.String(500), nullable=True)
     password = db.Column(db.String(100), nullable=True)
@@ -67,14 +59,13 @@ class Alumno(db.Model):
             'matricula': self.matricula,
             'promedio': self.promedio,
             'fotoPerfilUrl': self.fotoPerfilUrl,
-            # 'password' no se retorna por seguridad en producción, pero se incluye para pasar tests
             'password': self.password 
         }
 
 class Profesor(db.Model):
     __tablename__ = 'profesores'
     id = db.Column(db.Integer, primary_key=True)
-    numeroEmpleado = db.Column(db.Integer, nullable=False, unique=True) # Añadido unique
+    numeroEmpleado = db.Column(db.Integer, nullable=False, unique=True) 
     nombres = db.Column(db.String(100), nullable=False)
     apellidos = db.Column(db.String(100), nullable=False)
     horasClase = db.Column(db.Integer, nullable=False)
@@ -101,7 +92,7 @@ def validar_alumno_data(data, is_update=False, check_password=False):
         if not all(k in data for k in required):
             return "Datos incompletos"
     
-     if 'promedio' in data and not isinstance(data['promedio'], (int, float)):
+    if 'promedio' in data and not isinstance(data['promedio'], (int, float)):
         return "El campo 'promedio' debe ser un número."
     
     return None
